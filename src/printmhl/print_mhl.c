@@ -353,9 +353,9 @@ int fill_user_and_host_info(
   size_t bufsize;
   long max_sz;
   int res;
-  int login_len;
-  int name_len;
-  int host_len;
+  size_t login_len;
+  size_t name_len;
+  long host_len;
 
   max_sz = sysconf(_SC_GETPW_R_SIZE_MAX);
   if (max_sz == -1)    

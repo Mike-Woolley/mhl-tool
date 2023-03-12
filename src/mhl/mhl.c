@@ -1,19 +1,19 @@
 /*
  The MIT License (MIT)
- 
+
  Copyright (c) 2016 Pomfort GmbH
  https://github.com/pomfort/mhl-tool
- 
+
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
  in the Software without restriction, including without limitation the rights
  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  copies of the Software, and to permit persons to whom the Software is
  furnished to do so, subject to the following conditions:
- 
+
  The above copyright notice and this permission notice shall be included in all
  copies or substantial portions of the Software.
- 
+
  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -49,7 +49,7 @@ typedef struct _st_subcommand
 {
   en_main_mode mode;
   unsigned char print_version; // 1 - to print, 0 - to skip
-  size_t next_idx;
+  int next_idx;
 } st_subcommand;
 
 int parse_main_params(int argc, const char* argv[],
@@ -85,7 +85,7 @@ int parse_main_params(int argc, const char* argv[],
       subcommand->print_version = 1;
       ++i;
     }
-    
+
     if (i < argc)
     {
       if (strcmp(argv[i], "seal") == 0)
@@ -113,7 +113,7 @@ int parse_main_params(int argc, const char* argv[],
         res = ERRCODE_WRONG_ARGUMENTS;
       }
     }
-    
+
   }
 
   subcommand->next_idx = i;
@@ -130,7 +130,7 @@ int main(int argc, const char * argv[])
   //setting line buffered mode for stdout to enable better parsing from Mac OS X GUI application
   setvbuf(stdout, NULL, _IOLBF, 0);
 #endif
-    
+
   memset((void*) &subcommand, 0, sizeof(st_subcommand) / sizeof(char));
   mhlosi_setlocale();
 

@@ -1,19 +1,19 @@
 /*
  The MIT License (MIT)
- 
+
  Copyright (c) 2016 Pomfort GmbH
  https://github.com/pomfort/mhl-tool
- 
+
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
  in the Software without restriction, including without limitation the rights
  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  copies of the Software, and to permit persons to whom the Software is
  furnished to do so, subject to the following conditions:
- 
+
  The above copyright notice and this permission notice shall be included in all
  copies or substantial portions of the Software.
- 
+
  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -66,7 +66,7 @@
 void finalize_mhlcreate_data(st_mhlcreate_data* data)
 {
   unsigned int i;
-  st_file_data_ext* fl_data; 
+  st_file_data_ext* fl_data;
   st_mhl_file_data* mhl_data;
   st_files_refs* tmp_ref;
 
@@ -131,8 +131,8 @@ void finalize_mhlcreate_data(st_mhlcreate_data* data)
   free(data->input_data.files_data_array);
 }
 
-int fill_mhl_path( 
-  st_mhl_file_data* data, 
+int fill_mhl_path(
+  st_mhl_file_data* data,
   const wchar_t* mhl_wdirname,
   const struct tm* start_gmtm,
   st_conversion_settings* p_cs)
@@ -141,7 +141,6 @@ int fill_mhl_path(
   size_t wend_len;
   size_t wmhlfile_len;
   size_t full_wmhlfile_len;
-  int res;
   wchar_t* wname_shift_pointer;
   wchar_t* mhl_wfile_name;
   const wchar_t* containing_wdirname = NULL;
@@ -150,7 +149,7 @@ int fill_mhl_path(
   wchar_t* wftime_str;
   size_t wftime_str_sz;
 
-  if ( mhl_dir_wpath == NULL || mhl_dir_wpath->is_absolute == 0 || 
+  if ( mhl_dir_wpath == NULL || mhl_dir_wpath->is_absolute == 0 ||
        mhl_dir_wpath->is_normalized == 0)
   {
     return ERRCODE_INTERNAL_ERROR;
@@ -168,7 +167,7 @@ int fill_mhl_path(
     containing_wdirname = mhl_dir_wpath->items[mhl_dir_wpath->items_cnt - 1];
 #endif
   }
- 
+
   wend_len = wcslen(MHLNAME_END_WSTR);
 
   if (containing_wdirname != NULL)
@@ -196,9 +195,9 @@ int fill_mhl_path(
     if (mhl_wfile_name == NULL)
     {
       fprintf(
-        stderr, 
+        stderr,
         "Failed to allocate %lu bytes for MHL file name. "
-        "Out of memory.\n", 
+        "Out of memory.\n",
         (long unsigned int)wmhlfile_len * sizeof(wchar_t));
       return ERRCODE_OUT_OF_MEM;
     }
@@ -206,21 +205,18 @@ int fill_mhl_path(
     wname_shift_pointer = mhl_wfile_name;
   }
 
-  res = strftime(ftime_str, MHLNAME_TIME_SUBSTR_LEN + 1, "%Y-%m-%d_%H%M%S", start_gmtm);
-  if (res == 0)
+  if (strftime(ftime_str, MHLNAME_TIME_SUBSTR_LEN + 1, "%Y-%m-%d_%H%M%S", start_gmtm) == 0)
   {
     free(mhl_wfile_name);
     return ERRCODE_UNRECOGNIZED_TIME;
   }
 
-  res = 
-    convert_from_utf8_to_wchar(
-      ftime_str, 
-      strlen(ftime_str), 
-      &wftime_str, 
+  if (convert_from_utf8_to_wchar(
+      ftime_str,
+      strlen(ftime_str),
+      &wftime_str,
       &wftime_str_sz,
-      p_cs);
-  if (res != 0)
+      p_cs) != 0)
   {
     free(mhl_wfile_name);
     return ERRCODE_UNRECOGNIZED_TIME;
@@ -236,7 +232,7 @@ int fill_mhl_path(
     wcsncpy(wname_shift_pointer, MHLNAME_END_WSTR, wend_len);
   }
 
-  // Now mhl_file_name contains created file name. 
+  // Now mhl_file_name contains created file name.
   // Construct full path to the file.
   wdir_len = wcslen(mhl_wdirname);
   if (wdir_len == 0)
@@ -250,7 +246,7 @@ int fill_mhl_path(
   // space for PATH_SEPARATOR, and mhlfile_len (file only)
   full_wmhlfile_len = wdir_len + 1 + wmhlfile_len;
   data->mhl_wpath = (wchar_t*)calloc(full_wmhlfile_len, sizeof(wchar_t));
-  
+
   if (data->mhl_wpath == NULL)
   {
     fprintf(stderr, "Failed to allocate %lu bytes for MHL file name. "
@@ -260,7 +256,7 @@ int fill_mhl_path(
   }
 
   wcsncpy(data->mhl_wpath, mhl_wdirname, wdir_len);
-    
+
   if (data->mhl_wpath[wdir_len-1] != WPATH_SEPARATOR)
   {
     data->mhl_wpath[wdir_len] = WPATH_SEPARATOR;
@@ -270,7 +266,7 @@ int fill_mhl_path(
   {
     wname_shift_pointer = data->mhl_wpath + wdir_len;
   }
-    
+
   // We have already '\0' at the end of string due to calloc
   wcsncpy(wname_shift_pointer, mhl_wfile_name, wmhlfile_len - 1);
 
@@ -284,7 +280,7 @@ init_mhlcreate_data(st_mhlcreate_data* data,
                     st_verbose_data* p_v_data)
 {
   memset((void*) data, 0, sizeof(st_mhlcreate_data) / sizeof(char));
-  
+
   if (p_v_data == NULL)
   {
     fprintf(stderr, "init_mhlcreate_data(): Internal error - "
@@ -292,7 +288,7 @@ init_mhlcreate_data(st_mhlcreate_data* data,
     return ERRCODE_INTERNAL_ERROR;
   }
   data->p_v_data = p_v_data;
-  
+
   return 0;
 }
 
@@ -311,7 +307,7 @@ int preprocess_mhlcreate_data(
   data->wworkdir = get_wworkdir(p_cs);
   if (data->wworkdir == 0)
   {
-    return ERRCODE_INTERNAL_ERROR; 
+    return ERRCODE_INTERNAL_ERROR;
   }
 
   res = init_fs_wpath(data->wworkdir, &(data->workdir_wpath));
@@ -320,7 +316,7 @@ int preprocess_mhlcreate_data(
     return res;
   }
 
-  // We got this path from system, so it is always normalized 
+  // We got this path from system, so it is always normalized
   data->workdir_wpath.is_normalized = 1;
 
   if (data->mhl_paths.mhl_files_data_cnt == 0)
@@ -366,7 +362,7 @@ int preprocess_mhlcreate_data(
     mhl_f_data = data->mhl_paths.mhl_files_data + i;
 
     // change paths separators (makes sense only for windows)
-    make_wpath_os_specific(mhl_f_data->mhl_wdirname); 
+    make_wpath_os_specific(mhl_f_data->mhl_wdirname);
 
     if (data->p_v_data->verbose_level)
     {
@@ -412,7 +408,7 @@ int preprocess_mhlcreate_data(
     logit(data->p_v_data, "-------------------\n");
   }
 
-  return res; 
+  return res;
 }
 
 int
@@ -433,8 +429,8 @@ open_wfile(const wchar_t* file_wpath, FILE** fl_descr)
 int convert_time_to_gmtime(time_t seconds_since_epoche_start, struct tm* gmtm)
 {
 
-#ifdef WIN  
-  int res;  
+#ifdef WIN
+  int res;
   res = gmtime_s(gmtm, &seconds_since_epoche_start);
   if ( res != 0)
   {
@@ -451,8 +447,8 @@ int convert_time_to_gmtime(time_t seconds_since_epoche_start, struct tm* gmtm)
 }
 
 static
-int 
-timetostr(char** time_str, time_t seconds_since_epoche_start, 
+int
+timetostr(char** time_str, time_t seconds_since_epoche_start,
           struct tm* cur_gmtm)
 {
   int res;
@@ -471,8 +467,7 @@ timetostr(char** time_str, time_t seconds_since_epoche_start,
   }
 
   // 2011-03-10T07:49:21Z
-  res = strftime(*time_str, TIME_STR_SZ, "%Y-%m-%dT%H:%M:%SZ", cur_gmtm);
-  if (res == 0)
+  if (strftime(*time_str, TIME_STR_SZ, "%Y-%m-%dT%H:%M:%SZ", cur_gmtm) == 0)
   {
     return ERRCODE_UNRECOGNIZED_TIME;
   }
@@ -488,7 +483,7 @@ int get_xml_date(char** date_str, struct tm* cur_gmtm)
   cur_tm = time(NULL);
   if (cur_tm < 0)
   {
-    fprintf(stderr, "Unknown error, time() call failed. " 
+    fprintf(stderr, "Unknown error, time() call failed. "
             "Errno=%d. Error:%s\n",
             errno, strerror(errno));
     return ERRCODE_UNKNOWN_ERROR;
@@ -505,8 +500,6 @@ int get_xml_date(char** date_str, struct tm* cur_gmtm)
 
 int date_to_log_str(char** date_str, const struct tm* gmtm)
 {
-  int res;
-
   *date_str = (char*)calloc(TIME_STR_SZ, sizeof(char));
   if (*date_str == NULL)
   {
@@ -515,8 +508,7 @@ int date_to_log_str(char** date_str, const struct tm* gmtm)
   }
 
   // 2011-03-10 07:49:21
-  res = strftime(*date_str, TIME_STR_SZ, "%Y-%m-%d %H:%M:%S", gmtm);
-  if (res == 0)
+  if (strftime(*date_str, TIME_STR_SZ, "%Y-%m-%d %H:%M:%S", gmtm) == 0)
   {
     return ERRCODE_UNRECOGNIZED_TIME;
   }
@@ -526,7 +518,7 @@ int date_to_log_str(char** date_str, const struct tm* gmtm)
 
 int
 process_file(
-  st_file_data_ext* file_data, 
+  st_file_data_ext* file_data,
   st_fs_wpath* work_wpath,
   st_conversion_settings* p_cs)
 {
@@ -550,7 +542,7 @@ process_file(
 
   if (!file_data->file_wpath.is_absolute)
   {
-    res = 
+    res =
       convert_fs_wpath_to_absolute(work_wpath, &(file_data->file_wpath));
     if (res != 0)
     {
@@ -559,14 +551,14 @@ process_file(
   }
   else
   {
-    // Even if path is already absolute, we need to normalize it 
+    // Even if path is already absolute, we need to normalize it
     res = normalize_fs_wpath(&(file_data->file_wpath));
     if (res != 0)
     {
       return res;
     }
   }
- 
+
   res = get_wfile_stat_data(file_data->orig_wfilename, &wfl_stat);
   if (res != 0)
   {
@@ -577,7 +569,7 @@ process_file(
     }
     else
     {
-      fprintf(stderr, "Error: Cannot get file's data, stat() failed for file: " 
+      fprintf(stderr, "Error: Cannot get file's data, stat() failed for file: "
               "%ls. Errno=%d. Error:%s\n",
               file_data->orig_wfilename, errno, strerror(errno));
     }
@@ -585,7 +577,7 @@ process_file(
   }
 
   file_data->file_sz = wfl_stat.st_data.st_size;
-  res = timetostr(&(file_data->lastmodificationdate_str), 
+  res = timetostr(&(file_data->lastmodificationdate_str),
                   wfl_stat.st_data.st_mtime, &gm_date);
   if (res != 0)
   {
@@ -660,7 +652,7 @@ add_data_to_containing_folders(st_mhl_dirs_data* mhl_paths_ref,
       }
 
       //reassign;
-      //now relative_wfilename from st_files_refs is responsible 
+      //now relative_wfilename from st_files_refs is responsible
       //for holding the allocated memory
       (*file_in_dir)->relative_wfilename = relative_wfilename;
       (*file_in_dir)->file_data_idx = file_data_idx;
@@ -724,7 +716,7 @@ int create_mhl_files(st_mhlcreate_data* data, st_conversion_settings* p_cs)
       return res;
     }
 
-    res = create_mhl(&data->creator_data, data->p_v_data, mhl_f_data, 
+    res = create_mhl(&data->creator_data, data->p_v_data, mhl_f_data,
                      &data->input_data, p_cs);
     if (0 == res && data->p_v_data->machine_output) {
       fprintf(stderr, "%ls|OK\n", mhl_f_data->mhl_wpath);

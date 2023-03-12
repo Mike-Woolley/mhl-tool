@@ -96,7 +96,7 @@ prepare_data_for_mhl_create(const wchar_t* wfilename, const char* md5_hash_str,
 {
   int res;
   st_files_data* p_files_data;
-  size_t idx;
+  unsigned int idx;
 
   if (p_mhlcreate_data == NULL)
   {

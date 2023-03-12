@@ -1,19 +1,19 @@
 /*
  The MIT License (MIT)
- 
+
  Copyright (c) 2016 Pomfort GmbH
  https://github.com/pomfort/mhl-tool
- 
+
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
  in the Software without restriction, including without limitation the rights
  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  copies of the Software, and to permit persons to whom the Software is
  furnished to do so, subject to the following conditions:
- 
+
  The above copyright notice and this permission notice shall be included in all
  copies or substantial portions of the Software.
- 
+
  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -37,9 +37,9 @@
 #define SEQUENCE_RANGEMARK L'-'
 
 #define AUX_TEMP_BUFF_SZ 64
-int 
+int
 create_file_wpath_for_sequence_number(
-  int i,
+  unsigned long i,
   st_mhl_sequence* p_seq,
   wchar_t** file_wpath,
   st_conversion_settings* p_cs)
@@ -69,15 +69,15 @@ create_file_wpath_for_sequence_number(
 
   if (p_seq->start_len !=0)
   {
-    wres = 
+    wres =
       mhlosi_wstrncat(
         p_seq->start_str, file_wpath_component, p_seq->start_len);
     if (wres == 0)
     {
       free(*file_wpath);
       *file_wpath = 0;
-    
-      return ERRCODE_INTERNAL_ERROR; 
+
+      return ERRCODE_INTERNAL_ERROR;
     }
 
     file_wpath_component += p_seq->start_len;
@@ -87,13 +87,13 @@ create_file_wpath_for_sequence_number(
   memset(format_str, 8, AUX_TEMP_BUFF_SZ * sizeof(wchar_t) / sizeof(char));
   if (p_seq->padding)
   {
-    ires = swprintf(format_str, AUX_TEMP_BUFF_SZ, L"%%0%dd", p_seq->number_len);
+    ires = swprintf(format_str, AUX_TEMP_BUFF_SZ, L"%%0%dlu", p_seq->number_len);
   }
   else
   {
-    ires = swprintf(format_str, AUX_TEMP_BUFF_SZ, L"%%d");
+    ires = swprintf(format_str, AUX_TEMP_BUFF_SZ, L"%%lu");
   }
-  
+
   if (ires == -1)
   {
     free(*file_wpath);
@@ -111,22 +111,22 @@ create_file_wpath_for_sequence_number(
 
     return ERRCODE_INTERNAL_ERROR;
   }
- 
+
   // create end string part of sequence result
   if (p_seq->end_len !=0)
   {
     file_wpath_component = *file_wpath;
     // mhlosi_wstrncat() takes dst string (may ber not empty),
     // and prints to the end
-    wres = 
+    wres =
       mhlosi_wstrncat(
         p_seq->end_str, file_wpath_component, p_seq->end_len);
     if (wres == 0)
     {
       free(*file_wpath);
       *file_wpath = 0;
-    
-      return ERRCODE_INTERNAL_ERROR; 
+
+      return ERRCODE_INTERNAL_ERROR;
     }
   }
 
@@ -151,22 +151,22 @@ init_mhl_sequence(
   char* loc_num_beg;
   size_t loc_num_beg_sz;
   char* p_tmp = 0;
-  
+
   if (pattern == 0 || pattern[0] == L'\0' || p_seq == 0)
   {
     return ERRCODE_WRONG_ARGUMENTS;
   }
-  
+
   memset(p_seq, 0, sizeof(*p_seq) / sizeof(char));
-  
+
   p_beg = pattern;
- 
+
   p_next = wcschr(p_beg, SEQUENCE_ANYMARK);
-  p_diff_sz = 
-    p_next == NULL ? 
-    wcslen(p_beg) : 
+  p_diff_sz =
+    p_next == NULL ?
+    wcslen(p_beg) :
     (size_t) (p_next - p_beg);
-    
+
   if (p_diff_sz != 0)
   {
     p_seq->start_str = mhlosi_wstrndup(p_beg, p_diff_sz);
@@ -179,14 +179,14 @@ init_mhl_sequence(
   {
     p_seq->start_str = NULL;
   }
-   
+
   p_seq->start_len = p_diff_sz;
 
   if (p_next != NULL)
   {
     p_beg = p_next;
 
-    while (*p_next == SEQUENCE_ANYMARK) 
+    while (*p_next == SEQUENCE_ANYMARK)
     {
       ++p_next;
     }
@@ -201,31 +201,31 @@ init_mhl_sequence(
       }
     }
 
-    p_beg = p_next;  
-  
+    p_beg = p_next;
+
     p_next = wcschr(p_beg, SEQUENCE_RANGEMARK);
     if (p_next == 0)
     {
       fini_mhl_sequence(p_seq);
       return ERRCODE_INVALID_SEQUENCE;
-    }     
+    }
 
     p_diff_sz = (size_t) (p_next - p_beg);
-   
+
     res = convert_from_wchar_to_utf8(
       p_beg,
       p_diff_sz,
       &loc_num_beg,
       &loc_num_beg_sz,
       p_cs);
- 
+
     if (res != 0)
     {
       fini_mhl_sequence(p_seq);
       return res;
-    }     
+    }
 
-    p_seq->first_number = strtoul(loc_num_beg, &p_tmp, 10); 
+    p_seq->first_number = strtoul(loc_num_beg, &p_tmp, 10);
     if (*p_tmp != '\0')
     {
       free(loc_num_beg);
@@ -257,14 +257,14 @@ init_mhl_sequence(
       &loc_num_beg,
       &loc_num_beg_sz,
       p_cs);
- 
+
     if (res != 0)
     {
       fini_mhl_sequence(p_seq);
       return res;
-    }     
+    }
 
-    p_seq->last_number = strtoul(loc_num_beg, &p_tmp, 10); 
+    p_seq->last_number = strtoul(loc_num_beg, &p_tmp, 10);
     if (*p_tmp != '\0')
     {
       p_seq->padding = 1;
@@ -306,7 +306,7 @@ fini_mhl_sequence(
   st_mhl_sequence* p_seq)
 {
   //size_t i;
-  
+
   if (p_seq == 0)
   {
     return;
@@ -319,23 +319,23 @@ fini_mhl_sequence(
 
 /*
  * Return 1 if passed src string is sequence,
- *        0 if passed src string is not sequence (does ot contain '#' chars) 
+ *        0 if passed src string is not sequence (does ot contain '#' chars)
  */
-unsigned char 
+unsigned char
 is_sequence(const wchar_t* wsrc)
 {
   if (wsrc == 0 || wsrc[0] == '\0')
   {
     return 0;
   }
-  
+
   return wcschr(wsrc, SEQUENCE_ANYMARK) != 0 ? 1 : 0;
 }
 
 /*
  *
  */
-int 
+int
 search_files_fit_to_sequence(
   const wchar_t* p_seq_path,
   st_conversion_settings* p_cs,
@@ -349,52 +349,52 @@ search_files_fit_to_sequence(
   unsigned long i;
   FILE* fd;
   unsigned char gap_is_found = 0;
-  
+
   if (p_seq_path == 0 || p_cs == 0 || callback_fn == 0)
   {
     return ERRCODE_WRONG_ARGUMENTS;
   }
-  
+
   //
   // 1. create absolute path
   //
-  res = 
+  res =
     convert_to_absolute_normalized_wpath(
-      p_seq_path,                                       
+      p_seq_path,
       &absolute_sequence_wpath,
       p_cs);
-  
+
   if (res != 0)
   {
     return res;
   }
-  
+
   if (!is_sequence(absolute_sequence_wpath))
   {
     // It is not sequence. Check it and return.
     res = callback_fn(p_seq_path, data);
     free(absolute_sequence_wpath);
-    
+
     return res;
   }
-   
+
   //
   // 2. Parse sequence string
   //
-  res = init_mhl_sequence(absolute_sequence_wpath, &seq, p_cs); 
+  res = init_mhl_sequence(absolute_sequence_wpath, &seq, p_cs);
   if (res != 0)
   {
     free(absolute_sequence_wpath);
     return res;
   }
-  
+
 /*
-  res = 
+  res =
     extract_wdir_from_wpath(
-      absolute_sequence_wpath, 
+      absolute_sequence_wpath,
       &parent_wdir);
-*/  
-  
+*/
+
   //
   // 3. enum files according to sequence
   //
@@ -402,7 +402,7 @@ search_files_fit_to_sequence(
   for (i = seq.first_number; i <= seq.last_number; ++i)
   {
     res = create_file_wpath_for_sequence_number(i, &seq, &file_wpath, p_cs);
-    if (res != 0) 
+    if (res != 0)
     {
       fini_mhl_sequence(&seq);
       return res;
@@ -434,14 +434,14 @@ search_files_fit_to_sequence(
   for (i = seq.first_number; i <= seq.last_number; ++i)
   {
     res = create_file_wpath_for_sequence_number(i, &seq, &file_wpath, p_cs);
-    if (res != 0) 
+    if (res != 0)
     {
       fini_mhl_sequence(&seq);
       return res;
     }
     res = callback_fn(file_wpath, data);
     free(file_wpath);
-    if (res != 0) 
+    if (res != 0)
     {
       fini_mhl_sequence(&seq);
       return res;
@@ -452,6 +452,6 @@ search_files_fit_to_sequence(
   // 4. clear data
   //
   fini_mhl_sequence(&seq);
-  
-  return 0;  
+
+  return 0;
 }
